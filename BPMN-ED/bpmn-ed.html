@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>BPMN-ED: Editor de Flujos de Proceso</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.11.1/dist/assets/diagram-js.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.11.1/dist/assets/bpmn-font/css/bpmn.css">
+    
+    <style>
+        body { font-family: sans-serif; height: 100vh; margin: 0; display: flex; flex-direction: column; }
+        header { background: #2c3e50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        #canvas { flex-grow: 1; background: #fafafa; }
+        .buttons { display: flex; gap: 10px; }
+        button { padding: 8px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-xml { background: #3498db; color: white; }
+        .btn-svg { background: #e67e22; color: white; }
+        #xml-output { position: fixed; bottom: 0; left: 0; width: 100%; height: 200px; background: #222; color: #0f0; padding: 10px; font-family: monospace; display: none; overflow: auto; z-index: 1000; }
+        .close-btn { position: sticky; top: 0; float: right; color: white; cursor: pointer; background: red; padding: 5px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <strong>Editor de flujos de proceso</strong>
+    <div class="buttons">
+        <button class="btn-xml" onclick="exportXML()">Ver XML</button>
+        <button class="btn-svg" onclick="exportSVG()">Descargar SVG</button>
+    </div>
+</header>
+
+<div id="canvas"></div>
+
+<div id="xml-output">
+    <span class="close-btn" onclick="document.getElementById('xml-output').style.display='none'">CERRAR</span>
+    <pre id="xml-content"></pre>
+</div>
+
+<script src="https://unpkg.com/bpmn-js@17.11.1/dist/bpmn-modeler.development.js"></script>
+
+<script>
+    // XML inicial por defecto (un proceso vacío con un evento de inicio)
+    const initialXml = `<?xml version="1.0" encoding="UTF-8"?>
+    <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+      <bpmn:process id="Process_1" isExecutable="false">
+        <bpmn:startEvent id="StartEvent_1" name="Inicio" />
+      </bpmn:process>
+      <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+          <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+            <dc:Bounds x="173" y="102" width="36" height="36" />
+          </bpmndi:BPMNShape>
+        </bpmndi:BPMNPlane>
+      </bpmndi:BPMNDiagram>
+    </bpmn:definitions>`;
+
+    // Crear el modelador en el contenedor #canvas
+    const bpmnModeler = new BpmnJS({ container: '#canvas' });
+
+    // Cargar el diagrama inicial
+    async function openDiagram(xml) {
+        try {
+            await bpmnModeler.importXML(xml);
+            bpmnModeler.get('canvas').zoom('fit-viewport');
+        } catch (err) {
+            console.error('Error cargando el diagrama', err);
+        }
+    }
+
+    // Exportar XML y mostrarlo en pantalla
+    async function exportXML() {
+        try {
+            const { xml } = await bpmnModeler.saveXML({ format: true });
+            document.getElementById('xml-content').innerText = xml;
+            document.getElementById('xml-output').style.display = 'block';
+        } catch (err) {
+            console.error('Error exportando XML', err);
+        }
+    }
+
+    // Exportar y descargar como imagen SVG
+    async function exportSVG() {
+        try {
+            const { svg } = await bpmnModeler.saveSVG();
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'diagrama-proceso.svg';
+            a.click();
+        } catch (err) {
+            console.error('Error exportando SVG', err);
+        }
+    }
+
+    // Iniciar
+    openDiagram(initialXml);
+</script>
+
+</body>
+</html>
