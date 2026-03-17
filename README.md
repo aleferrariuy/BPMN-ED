@@ -3,7 +3,7 @@ Editor de flujos de proceso basado en BPMN 2.0
 
 ## ¿Comó se ve?
 
-¡[](other-files/ed.png)
+![](other-files/ed.png)
 
 ## Descarga de la última versión
 
